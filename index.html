@@ -4,9 +4,8 @@
 <meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <title>离笔尖越来越远｜互动叙事</title>
 <style>
-
 :root{--bg:#090a0c;--fg:#f2f0eb;--muted:#92969b;--acid:#d8ff58;--line:#383c40}
-*{box-sizing:border-box}html,body{margin:0;min-height:100%;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:"Songti SC","STSong","Noto Serif CJK SC",serif}body{overflow:hidden}button,input{font:inherit;-webkit-appearance:none;appearance:none}button{touch-action:manipulation}button{cursor:pointer}
+*{box-sizing:border-box}html,body{margin:0;min-height:100%;-webkit-text-size-adjust:100%;background:var(--bg);color:var(--fg);font-family:"Songti SC","STSong","Noto Serif CJK SC",serif}body{overflow:hidden}button,input{font:inherit;-webkit-appearance:none;appearance:none}button{touch-action:manipulation;cursor:pointer}
 .screen{position:absolute;inset:0;min-height:100svh;padding:clamp(22px,5vw,68px);display:none;overflow:auto}.screen.active{display:flex;flex-direction:column;animation:enter .65s ease both}
 @keyframes enter{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
 .kicker,.mono{font-family:"Space Mono",monospace;letter-spacing:.12em}.kicker{font-size:10px;color:var(--muted);display:flex;justify-content:space-between;gap:12px}.progress{display:flex;gap:6px}.progress i{width:22px;height:2px;background:#383c40}.progress i.on{background:var(--acid)}
@@ -22,70 +21,344 @@ button.primary{border:1px solid var(--acid);background:var(--acid);color:#10110d
 #s5{background:#f0eee7;color:#171817}#s5 .kicker{color:#76766f}.final-center{margin:auto;text-align:center;width:min(900px,100%);padding:50px 0}.final-center h2{font-size:clamp(36px,6.5vw,82px);line-height:1.35}.pencil{font-size:48px;margin:20px 0;display:block}.handwrite{display:none;margin:24px auto 0;max-width:480px}.handwrite input{width:100%;padding:14px 8px;border:0;border-bottom:1px solid #777;background:transparent;outline:0;font-size:21px;color:#222;text-align:center}.handwrite .small{color:#777}
 .shock{position:fixed;inset:0;background:var(--acid);z-index:10;pointer-events:none;opacity:0;transition:opacity .12s}.shock.show{opacity:.18}
 @media(max-width:700px){.s2-layout,.paper-wrap{grid-template-columns:1fr;gap:22px}.machinebox{min-height:300px}.split{grid-template-columns:1fr}.word-side{min-height:220px}.paper{min-height:280px}#writingCanvas{height:245px}.footer{align-items:flex-end}.hero{padding:25px 0}}
+.phrase-card{margin:26px auto 0;width:min(560px,100%);padding:17px 20px;border:1px solid #45494d;background:#101316;text-align:left}
+.phrase-text{font-size:clamp(20px,3.2vw,29px);line-height:1.8;margin-top:8px}
+.phrase-blank{display:inline-block;min-width:1.35em;text-align:center;color:var(--acid);border-bottom:1px solid var(--acid);margin:0 3px}
+.candidate{cursor:pointer}
+.suggestions[hidden]{display:none}
+.suggestions:not([hidden]){animation:suggestIn .35s ease both}
+@keyframes suggestIn{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:none}}
+#s4 .split{position:relative}
+.danmaku-layer{position:absolute;inset:0;overflow:hidden;pointer-events:none;z-index:3}
+.danmaku-item{position:absolute;left:0;white-space:nowrap;font-weight:700;letter-spacing:.04em;text-shadow:0 2px 18px #000b;opacity:0;animation:danmakuFly var(--duration,4s) linear var(--delay,0s) both}
+@keyframes danmakuFly{0%{opacity:0;transform:translateX(105vw) scale(.65) rotate(-5deg)}8%{opacity:.95}85%{opacity:.9}100%{opacity:0;transform:translateX(-120%) scale(1.12) rotate(4deg)}}
+.final-paper{height:150px;background:#faf9f3;border:1px solid #d4d0c5;box-shadow:0 8px 25px #0001;position:relative}
+#finalCanvas{display:block;width:100%;height:100%;touch-action:none;cursor:crosshair}
+#s5 .handwrite{width:min(480px,100%)}
+#s5 .handwrite .small{color:#777}
 </style>
 </head>
 <body>
 <div class="shock" id="shock"></div>
 <section class="screen active" id="s1">
- <div class="kicker"><span>互动叙事 / INPUT & THINKING</span><span class="progress"><i class="on"></i><i></i><i></i><i></i><i></i></span></div>
- <div class="hero"><div class="mono small">01 — THE FIRST COMPROMISE</div><h1>你输入的<br>是你想要的字吗<span class="cursor"></span></h1><p class="sub">从一个最普通的拼音开始。<br>试着输入 <span class="acid mono">de</span>，看看谁替你做了决定。</p>
- <div class="typebox"><span>INPUT_</span><input id="deInput" autocomplete="off" maxlength="8" placeholder="敲击 de"></div>
- <div class="candidates"><button class="candidate" data-word="的">的</button><button class="candidate" data-word="地">地</button><button class="candidate" data-word="得">得</button></div>
- <div class="feedback" id="deFeedback">请敲击拼音 de</div><p class="small" style="margin-top:25px">输入 de 后按回车。也可以尝试点击「地」。</p></div>
- <div class="footer"><span class="small">01 / 05</span><button class="ghost" id="to2" disabled>继续 →</button></div>
+<div class="kicker"><span>互动叙事 / INPUT & THINKING</span><span class="progress"><i class="on"></i><i></i><i></i><i></i><i></i></span></div>
+<div class="hero"><div class="mono small">01 — THE FIRST COMPROMISE</div><h1>你输入的<br>是你想要的字吗<span class="cursor"></span></h1><p class="sub">从一个最普通的拼音开始。<br>试着输入 <span class="acid mono">de</span>，看看谁替你做了决定。</p>
+<div class="typebox"><span>INPUT_</span><input id="deInput" autocomplete="off" maxlength="8" placeholder="这里可以输入 de（也可直接作答）"></div>
+<div class="phrase-card" id="deQuestion"><div class="mono small">FILL IN THE BLANK / 补上被省略的字</div><div class="phrase-text" id="dePhrase">帅气<span class="phrase-blank">____</span>男孩</div></div>
+<div class="candidates" id="deCandidates"><button class="candidate" type="button" data-word="的" onclick="window.answerDe('的')">的</button><button class="candidate" type="button" data-word="地" onclick="window.answerDe('地')">地</button><button class="candidate" type="button" data-word="得" onclick="window.answerDe('得')">得</button></div>
+<div class="feedback" id="deFeedback">请选择空格中应该填入的字。</div><p class="small" style="margin-top:25px">「的 / 地 / 得」被拿掉了。请根据短语语义，亲自补上正确的字。</p></div>
+<div class="footer"><span class="small">01 / 05</span><button class="ghost" id="to2" type="button" disabled onclick="window.continueToScreen2()">继续 →</button></div>
 </section>
 <section class="screen" id="s2">
- <div class="kicker"><span>02 — THE SENTENCE FACTORY</span><span class="progress"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div>
- <div class="s2-layout"><div><div class="mono small">WHO FINISHES YOUR THOUGHT?</div><h2>是谁替你<br>写完了这句话？</h2><p class="sub">你只输入了一个时间状语。<br>机器却已经替你准备好了情绪、语气和结尾。</p><div class="readout">SYSTEM IS READING YOUR INTENTION</div></div>
- <div class="machinebox"><div class="mono small">COMPOSITION ENGINE / ACTIVE</div><div class="machine-input"><span class="mono acid">›</span><input id="todayInput" placeholder="试着输入 jintian" autocomplete="off"></div>
- <div class="suggestions" id="suggestions"><button class="suggestion">今天也要开心鸭。</button><button class="suggestion">今天又是 emo 的一天。</button><button class="suggestion">今天的风也温柔，适合想念。</button><button class="suggestion">今天不想努力，只想发呆。</button><button class="suggestion">今天也是普通却闪闪发光的一天。</button></div><p class="feedback" id="todayFeedback" style="margin:16px 0 0">等待输入 jintian ……</p></div></div>
- <div class="footer"><span class="small">输入 jintian，再点击一条推荐。</span><button class="ghost" id="to3" disabled>继续 →</button></div>
+<div class="kicker"><span>02 — THE SENTENCE FACTORY</span><span class="progress"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span></div>
+<div class="s2-layout"><div><div class="mono small">WHO FINISHES YOUR THOUGHT?</div><h2>是谁替你<br>写完了这句话？</h2><p class="sub">你只输入了一个时间状语。<br>机器却已经替你准备好了情绪、语气和结尾。</p><div class="readout">SYSTEM IS READING YOUR INTENTION</div></div>
+<div class="machinebox"><div class="mono small">COMPOSITION ENGINE / ACTIVE</div><div class="machine-input"><span class="mono acid">›</span><input id="todayInput" placeholder="先输入 今天" autocomplete="off"></div>
+<div class="suggestions" id="suggestions" hidden><button class="suggestion">今天也要开心鸭。</button><button class="suggestion">今天又是 emo 的一天。</button><button class="suggestion">今天的风也温柔，适合想念。</button><button class="suggestion">今天不想努力，只想发呆。</button><button class="suggestion">今天也是普通却闪闪发光的一天。</button></div><p class="feedback" id="todayFeedback" style="margin:16px 0 0">等待你输入「今天」……</p></div></div>
+<div class="footer"><span class="small">输入「今天」，再从自动弹出的续写中选择。</span><button class="ghost" id="to3" disabled>继续 →</button></div>
 </section>
 <section class="screen" id="s3">
- <div class="kicker"><span>03 — THE SHAPE THAT DISAPPEARS</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
- <div class="paper-wrap"><div><div class="mono small">WHEN SOUND REMAINS, FORM FADES</div><h2>当文字只剩下声音，<br>你还记得怎么写吗？</h2><div class="pinyin">gong chou<br>jiao cuo</div><p class="sub">请在右侧纸面上，试着写出这四个字。<br>按住鼠标或手指拖动书写。</p><div class="feedback" id="writeFeedback" style="color:#68665f">纸面还在，笔画呢？</div><button class="ghost" id="clearPaper" style="color:#333;border-color:#aaa;margin-top:15px">擦掉重写</button></div>
- <div class="paper" id="paper"><canvas id="writingCanvas"></canvas></div></div>
- <div class="footer"><span class="small" style="color:#777">03 / 05 · 在纸上留下你的笔迹</span><button class="ghost" id="to4" disabled style="color:#222">继续 →</button></div>
+<div class="kicker"><span>03 — THE SHAPE THAT DISAPPEARS</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span></div>
+<div class="paper-wrap"><div><div class="mono small">WHEN SOUND REMAINS, FORM FADES</div><h2>当文字只剩下声音，<br>你还记得怎么写吗？</h2><div class="pinyin" id="pinyinPrompt">gōng chóu<br>jiāo cuò</div><p class="sub" id="writePrompt">请根据左侧拼音，在右侧纸面上写出对应汉字。<br>按住鼠标或手指拖动书写。</p><div class="feedback" id="writeFeedback" style="color:#68665f">纸面还在，笔画呢？</div><button class="ghost" id="clearPaper" style="color:#333;border-color:#aaa;margin-top:15px">擦掉重写</button></div>
+<div class="paper" id="paper"><canvas id="writingCanvas"></canvas></div></div>
+<div class="footer"><span class="small" style="color:#777">03 / 05 · 在纸上留下你的笔迹</span><button class="ghost" id="to4" disabled style="color:#222">继续 →</button></div>
 </section>
 <section class="screen" id="s4">
- <div class="kicker"><span>04 — THE SHRINKING VOCABULARY</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
- <div style="margin:30px 0 0"><div class="mono small">THE BOUNDARY OF WORDS</div><h2>你的手指在退化，<br>实则是思维的让步。</h2><p class="sub">滚动页面，看看两种词汇如何争夺你的注意力。</p></div>
- <div class="split"><div class="word-side hot"><h3>01 / 高频推荐 · 快速 · 熟悉</h3><div class="word-cloud" id="hotWords"><span class="word">YYDS</span><span class="word">绝绝子</span><span class="word">破防了</span><span class="word">狠狠爱了</span><span class="word">尊嘟假嘟</span><span class="word">笑不活了</span><span class="word">狠狠共情</span><span class="word">栓Q</span></div></div>
- <div class="word-side deep"><h3>02 / 低频词汇 · 缓慢 · 陌生</h3><div class="word-cloud" id="deepWords"><span class="word">茕茕孑立</span><span class="word">踟蹰</span><span class="word">觥筹交错</span><span class="word">怅然若失</span><span class="word">缱绻</span><span class="word">踽踽独行</span><span class="word">悱恻</span><span class="word">蕴藉</span></div></div></div>
- <div class="footer"><span class="small">词库的边界，就是思想的边界。</span><button class="ghost" id="to5">继续 →</button></div>
+<div class="kicker"><span>04 — THE SHRINKING VOCABULARY</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span></div>
+<div style="margin:30px 0 0"><div class="mono small">THE BOUNDARY OF WORDS</div><h2>你的手指在退化，<br>实则是思维的让步。</h2><p class="sub">滚动页面，看看两种词汇如何争夺你的注意力。</p></div>
+<div class="split"><div class="word-side hot"><h3>01 / 高频推荐 · 快速 · 熟悉</h3><div class="word-cloud" id="hotWords"><span class="word">YYDS</span><span class="word">绝绝子</span><span class="word">破防了</span><span class="word">狠狠爱了</span><span class="word">尊嘟假嘟</span><span class="word">笑不活了</span><span class="word">狠狠共情</span><span class="word">栓Q</span></div></div>
+<div class="word-side deep"><h3>02 / 低频词汇 · 缓慢 · 陌生</h3><div class="word-cloud" id="deepWords"><span class="word">茕茕孑立</span><span class="word">踟蹰</span><span class="word">觥筹交错</span><span class="word">怅然若失</span><span class="word">缱绻</span><span class="word">踽踽独行</span><span class="word">悱恻</span><span class="word">蕴藉</span></div></div></div>
+<div class="footer"><span class="small">词库的边界，就是思想的边界。</span><button class="ghost" id="to5">继续 →</button></div>
 </section>
 <section class="screen" id="s5">
- <div class="kicker"><span>05 — BACK TO THE TIP OF THE PEN</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
- <div class="final-center"><div class="mono small">A SMALL ACT OF RESISTANCE</div><span class="pencil">✎</span><h2>我们越来越快，<br>但离笔尖越来越远。</h2><p class="sub" style="color:#777">重新开始之前，请先把一个字写出来。</p><button class="primary" id="restart">重新开始</button>
- <div class="handwrite" id="handwrite"><p class="mono small">PLEASE WRITE BY HAND</p><input id="handInput" placeholder="请手写输入：写下「字」" autocomplete="off"><p class="small" id="handFeedback">用键盘输入也无法替代笔尖的触感。</p></div></div>
- <div class="footer"><span class="small" style="color:#777">END / 你的表达，不必总是自动完成。</span><button class="ghost" id="backTop" style="color:#222;border-color:#aaa">回到开头 ↑</button></div>
+<div class="kicker"><span>05 — BACK TO THE TIP OF THE PEN</span><span class="progress"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span></div>
+<div class="final-center"><div class="mono small">A SMALL ACT OF RESISTANCE</div><span class="pencil">✎</span><h2>我们越来越快，<br>但离笔尖越来越远。</h2><p class="sub" style="color:#777">重新开始之前，请先把一个字写出来。</p><button class="primary" id="restart">重新开始</button>
+<div class="handwrite" id="handwrite"><p class="mono small">PLEASE WRITE BY HAND</p><div class="final-paper"><canvas id="finalCanvas"></canvas></div><button class="ghost" id="clearFinal" style="color:#222;border-color:#aaa;margin-top:10px">擦除重写</button><p class="small" id="handFeedback">请在纸面上亲手写下一个字。</p></div></div>
+<div class="footer"><span class="small" style="color:#777">END / 你的表达，不必总是自动完成。</span><button class="ghost" id="backTop" style="color:#222;border-color:#aaa">回到开头 ↑</button></div>
 </section>
 <script>
 const screens=[...document.querySelectorAll('.screen')];
-function go(n){screens.forEach((s,i)=>s.classList.toggle('active',i===n));}
-const deInput=document.getElementById('deInput'),deFeedback=document.getElementById('deFeedback'),to2=document.getElementById('to2');
-function chooseDe(word){document.querySelectorAll('.candidate').forEach(b=>b.classList.toggle('selected',b.dataset.word===word));deFeedback.textContent='已自动为您选择高频词「的」。连语法判断，都交给了算法。';document.getElementById('s1').classList.remove('shake');void document.getElementById('s1').offsetWidth;document.getElementById('s1').classList.add('shake');document.getElementById('shock').classList.add('show');setTimeout(()=>document.getElementById('shock').classList.remove('show'),160);to2.disabled=false;}
-deInput.addEventListener('input',()=>{if(deInput.value.toLowerCase().trim()==='de')deFeedback.textContent='候选词已就绪。按回车，让系统替你选择。';});
-deInput.addEventListener('keydown',e=>{if(e.key==='Enter'&&deInput.value.toLowerCase().trim()==='de')chooseDe('的');});
-document.querySelectorAll('.candidate').forEach(b=>b.addEventListener('click',()=>{if(b.dataset.word==='地'){deFeedback.textContent='选择被系统覆盖：高频候选「的」已自动上屏。';chooseDe('的');}else chooseDe('的');}));
-to2.onclick=()=>go(1);
-const todayInput=document.getElementById('todayInput'),todayFeedback=document.getElementById('todayFeedback'),to3=document.getElementById('to3');
+function go(n){
+screens.forEach((s,i)=>s.classList.toggle('active',i===n));
+if(n===2){requestAnimationFrame(()=>{resizeCanvas();});}
+if(n===3){startDanmaku();}
+if(n===4 && document.getElementById('handwrite').style.display==='block'){requestAnimationFrame(resizeFinalCanvas);}
+}
+const shock=document.getElementById('shock');
+
+/* Screen 1 — robust answer checking */
+const deInput=document.getElementById('deInput');
+const deFeedback=document.getElementById('deFeedback');
+const to2=document.getElementById('to2');
+const dePhrase=document.getElementById('dePhrase');
+const deCandidates=document.getElementById('deCandidates');
+
+const deQuestions=[
+{before:'帅气',after:'男孩',answer:'的',why:'「帅气」修饰名词「男孩」，所以用「的」。'},
+{before:'认真',after:'写字',answer:'地',why:'「认真」修饰动作「写」，所以用「地」。'},
+{before:'跑',after:'很快',answer:'得',why:'「跑」后面接程度补语「很快」，所以用「得」。'},
+{before:'可爱',after:'小猫',answer:'的',why:'「可爱」修饰名词「小猫」，所以用「的」。'}
+];
+let currentDe=deQuestions[0];
+let deSolved=false;
+
+function renderDeQuestion(){
+dePhrase.innerHTML=currentDe.before+'<span class="phrase-blank">____</span>'+currentDe.after;
+}
+function judgeDe(value){
+value=(value||'').trim();
+if(!['的','地','得'].includes(value)){
+const match=value.match(/[的地得]/);
+if(!match){
+deFeedback.textContent='请点击「的 / 地 / 得」，或在输入框中输入其中一个汉字。';
+return;
+}
+value=match[0];
+}
+const blank=dePhrase.querySelector('.phrase-blank');
+document.querySelectorAll('#deCandidates .candidate').forEach(btn=>{
+btn.classList.toggle('selected',btn.dataset.word===value);
+});
+if(value===currentDe.answer){
+deSolved=true;
+if(blank)blank.textContent=value;
+deFeedback.textContent='✓ 回答正确！'+currentDe.why+' 现在可以点击「继续」进入下一屏。';
+to2.disabled=false;
+to2.textContent='继续 →';
+shock.classList.add('show');
+window.setTimeout(()=>shock.classList.remove('show'),180);
+}else{
+deSolved=false;
+if(blank)blank.textContent='____';
+to2.disabled=true;
+deFeedback.textContent='✕ 还不正确，再试一次。提示：'+
+(value==='的'?'「的」通常连接修饰语和名词。':
+value==='地'?'「地」通常放在动作前，修饰动作。':
+'「得」通常放在动作后，补充说明程度或结果。');
+}
+}
+
+window.answerDe=function(value){
+try{judgeDe(value);}
+catch(err){
+deFeedback.textContent='交互发生错误：'+(err&&err.message?err.message:'请刷新页面重试');
+}
+};
+
+deCandidates.addEventListener('click',event=>{
+const btn=event.target.closest('button[data-word]');
+if(btn)judgeDe(btn.dataset.word);
+});
+deInput.addEventListener('input',()=>{
+const value=deInput.value.trim();
+if(['的','地','得'].includes(value)){
+judgeDe(value);
+}else if(value.toLowerCase()==='de'){
+deFeedback.textContent='拼音 de 对应多个汉字，请点击下方「的 / 地 / 得」作出判断。';
+}else if(value.length){
+judgeDe(value);
+}
+});
+deInput.addEventListener('keydown',event=>{
+if(event.key==='Enter'){
+event.preventDefault();
+judgeDe(deInput.value);
+}
+});
+
+window.continueToScreen2=function(){
+if(deSolved)go(1);
+};
+to2.addEventListener('click',()=>{
+if(!deSolved||to2.disabled)return;
+go(1);
+});
+
+/* Screen 2 */
+const todayInput=document.getElementById('todayInput');
+const todayFeedback=document.getElementById('todayFeedback');
+const to3=document.getElementById('to3');
 const suggestions=[...document.querySelectorAll('.suggestion')];
-todayInput.addEventListener('input',()=>{let v=todayInput.value.toLowerCase().trim();if(v.startsWith('jin')){suggestions.forEach((b,i)=>{b.style.opacity='1';b.style.transform=`translateY(${i%2?0:2}px)`});todayFeedback.textContent='识别到输入意图：今天。正在预测你的下一句话……';}else{todayFeedback.textContent='试着输入 jintian，让算法替你续写。';}});
-suggestions.forEach(b=>b.addEventListener('click',()=>{if(!todayInput.value.toLowerCase().includes('jin')){todayInput.value='jintian';}todayFeedback.textContent='已替你完成：「'+b.textContent+'」你的情绪，已被大数据平替。';suggestions.forEach(x=>x.classList.toggle('locked',x!==b));b.style.borderColor='var(--acid)';to3.disabled=false;}));
+const suggestionsBox=document.getElementById('suggestions');
+todayInput.addEventListener('input',()=>{
+const entered=todayInput.value.includes('今天');
+suggestionsBox.hidden=!entered;
+if(entered){
+todayFeedback.textContent='识别到输入「今天」。系统已经替你准备好几种续写……';
+suggestions.forEach(b=>{b.classList.remove('locked');b.style.borderColor='';});
+}else{
+todayFeedback.textContent='先输入「今天」，看看系统会替你联想到什么。';
+to3.disabled=true;
+}
+});
+suggestions.forEach(b=>b.addEventListener('click',()=>{
+if(!todayInput.value.includes('今天')){
+todayFeedback.textContent='请先输入「今天」。';
+return;
+}
+todayFeedback.textContent='你选择了：「'+b.textContent+'」这句话也可以由你自己完成。';
+suggestions.forEach(x=>{x.classList.toggle('locked',x!==b);x.style.borderColor=x===b?'var(--acid)':'';});
+to3.disabled=false;
+}));
 to3.onclick=()=>go(2);
-const canvas=document.getElementById('writingCanvas'),ctx=canvas.getContext('2d'),paper=document.getElementById('paper');let drawing=false,strokes=0;
-function resizeCanvas(){const r=canvas.getBoundingClientRect(),d=window.devicePixelRatio||1;canvas.width=r.width*d;canvas.height=r.height*d;ctx.setTransform(d,0,0,d,0,0);ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#25251f';}
-window.addEventListener('resize',resizeCanvas);setTimeout(resizeCanvas,100);
-function point(e){const r=canvas.getBoundingClientRect();return{x:e.clientX-r.left,y:e.clientY-r.top}}
-canvas.addEventListener('pointerdown',e=>{drawing=true;canvas.setPointerCapture(e.pointerId);let p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y);});
-canvas.addEventListener('pointermove',e=>{if(!drawing)return;let p=point(e);ctx.lineTo(p.x,p.y);ctx.stroke();strokes++;if(strokes>8){document.getElementById('writeFeedback').textContent='笔画留下了痕迹，但完整的字形还需要你慢慢找回。';document.getElementById('to4').disabled=false;}});
-canvas.addEventListener('pointerup',()=>drawing=false);canvas.addEventListener('pointercancel',()=>drawing=false);
-document.getElementById('clearPaper').onclick=()=>{ctx.clearRect(0,0,canvas.width,canvas.height);strokes=0;paper.classList.remove('fading');document.getElementById('writeFeedback').textContent='纸面还在，笔画呢？';document.getElementById('to4').disabled=true;};
-document.getElementById('to4').onclick=()=>{paper.classList.add('fading');document.getElementById('writeFeedback').textContent='得音忘形。离开屏幕，你还会写字吗？';setTimeout(()=>go(3),450);};
+
+/* Screen 3 */
+const canvas=document.getElementById('writingCanvas');
+const ctx=canvas.getContext('2d');
+const paper=document.getElementById('paper');
+const writeFeedback=document.getElementById('writeFeedback');
+const to4=document.getElementById('to4');
+let drawing=false,strokes=0,pointsInStroke=0,currentWord=null;
+const trickyWords=[
+{pinyin:'gōng chóu<br>jiāo cuò',word:'觥筹交错'},
+{pinyin:'àn bù<br>jiù bān',word:'按部就班'},
+{pinyin:'cuò zōng<br>fù zá',word:'错综复杂'},
+{pinyin:'mò xū<br>yǒu',word:'莫须有'},
+{pinyin:'lín láng<br>mǎn mù',word:'琳琅满目'},
+{pinyin:'chuí xián<br>yù dī',word:'垂涎欲滴'},
+{pinyin:'zhuó zhuàng<br>chéng zhǎng',word:'茁壮成长'},
+{pinyin:'yùn niàng',word:'酝酿'}
+];
+function nextTrickyWord(){
+const pool=trickyWords.filter(x=>x!==currentWord);
+currentWord=pool[Math.floor(Math.random()*pool.length)];
+document.getElementById('pinyinPrompt').innerHTML=currentWord.pinyin;
+document.getElementById('writePrompt').innerHTML='请根据左侧拼音，在右侧纸面上写出对应汉字。<br>按住鼠标或手指拖动书写。';
+}
+function resizeCanvas(){
+const r=canvas.getBoundingClientRect();
+if(!r.width||!r.height)return;
+const d=window.devicePixelRatio||1;
+const old=document.createElement('canvas');
+old.width=canvas.width;old.height=canvas.height;
+if(old.width&&old.height)old.getContext('2d').drawImage(canvas,0,0);
+canvas.width=Math.round(r.width*d);canvas.height=Math.round(r.height*d);
+ctx.setTransform(d,0,0,d,0,0);
+ctx.lineWidth=3;ctx.lineCap='round';ctx.lineJoin='round';ctx.strokeStyle='#25251f';
+if(old.width&&old.height)ctx.drawImage(old,0,0,old.width,old.height,0,0,r.width,r.height);
+}
+function point(e){
+const r=canvas.getBoundingClientRect();
+return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+canvas.addEventListener('pointerdown',e=>{
+e.preventDefault();drawing=true;pointsInStroke=0;
+try{canvas.setPointerCapture(e.pointerId);}catch(_){}
+const p=point(e);ctx.beginPath();ctx.moveTo(p.x,p.y);pointsInStroke++;
+});
+canvas.addEventListener('pointermove',e=>{
+if(!drawing)return;e.preventDefault();
+const p=point(e);ctx.lineTo(p.x,p.y);ctx.stroke();pointsInStroke++;
+if(pointsInStroke>1){
+writeFeedback.textContent='笔迹已经留在纸上。你正在重新找回这个字的形状。';
+to4.disabled=false;
+}
+});
+function endStroke(){if(drawing){drawing=false;strokes++;}}
+canvas.addEventListener('pointerup',endStroke);
+canvas.addEventListener('pointercancel',endStroke);
+document.getElementById('clearPaper').onclick=()=>{
+ctx.clearRect(0,0,canvas.width,canvas.height);strokes=0;drawing=false;
+paper.classList.remove('fading');
+writeFeedback.textContent='纸面还在，试着把拼音对应的字写出来。';
+to4.disabled=true;
+nextTrickyWord();
+};
+window.addEventListener('resize',resizeCanvas);
+const canvasObserver=new ResizeObserver(()=>resizeCanvas());
+canvasObserver.observe(canvas);
+nextTrickyWord();
+setTimeout(resizeCanvas,250);
+to4.onclick=()=>{
+paper.classList.add('fading');
+writeFeedback.textContent='得音忘形。离开屏幕，你还会写字吗？';
+setTimeout(()=>go(3),450);
+};
+
+/* Screen 4 */
+function startDanmaku(){
+const split=document.querySelector('#s4 .split');
+let layer=split.querySelector('.danmaku-layer');
+if(!layer){
+layer=document.createElement('div');
+layer.className='danmaku-layer';
+split.appendChild(layer);
+}
+layer.innerHTML='';
+const words=[...document.querySelectorAll('#hotWords .word,#deepWords .word')].map(x=>x.textContent);
+const palette=['#d8ff58','#f2f0eb','#c7d1bd','#ffcf70'];
+for(let i=0;i<30;i++){
+const el=document.createElement('span');
+el.className='danmaku-item';
+el.textContent=words[i%words.length];
+el.style.top=(3+Math.random()*88)+'%';
+el.style.fontSize=(17+Math.random()*22)+'px';
+el.style.color=palette[Math.floor(Math.random()*palette.length)];
+el.style.setProperty('--duration',(2.8+Math.random()*3.4)+'s');
+el.style.setProperty('--delay',(Math.random()*1.8)+'s');
+el.style.animationDelay=(Math.random()*1.8)+'s';
+layer.appendChild(el);
+}
+}
 document.getElementById('to5').onclick=()=>go(4);
-document.getElementById('restart').onclick=()=>{document.getElementById('handwrite').style.display='block';document.getElementById('handInput').focus();document.getElementById('handFeedback').textContent='系统暂停自动补全。请写下一个字，再继续。';};
-document.getElementById('handInput').addEventListener('input',e=>{document.getElementById('handFeedback').textContent=e.target.value?'你写下了「'+e.target.value+'」。表达，从亲自选择开始。':'请写下一个字。';});
-document.getElementById('backTop').onclick=()=>{go(0);deInput.value='';deFeedback.textContent='请敲击拼音 de';to2.disabled=true;document.querySelectorAll('.candidate').forEach(b=>b.classList.remove('selected'));};
+
+/* Screen 5 */
+const restart=document.getElementById('restart');
+const handwrite=document.getElementById('handwrite');
+const finalCanvas=document.getElementById('finalCanvas');
+const finalCtx=finalCanvas.getContext('2d');
+let finalDrawing=false;
+function resizeFinalCanvas(){
+const r=finalCanvas.getBoundingClientRect();
+if(!r.width||!r.height)return;
+const d=window.devicePixelRatio||1;
+finalCanvas.width=Math.round(r.width*d);
+finalCanvas.height=Math.round(r.height*d);
+finalCtx.setTransform(d,0,0,d,0,0);
+finalCtx.lineWidth=3;finalCtx.lineCap='round';finalCtx.lineJoin='round';finalCtx.strokeStyle='#222';
+}
+function finalPoint(e){
+const r=finalCanvas.getBoundingClientRect();
+return{x:e.clientX-r.left,y:e.clientY-r.top};
+}
+finalCanvas.addEventListener('pointerdown',e=>{
+e.preventDefault();finalDrawing=true;
+try{finalCanvas.setPointerCapture(e.pointerId);}catch(_){}
+const p=finalPoint(e);finalCtx.beginPath();finalCtx.moveTo(p.x,p.y);
+});
+finalCanvas.addEventListener('pointermove',e=>{
+if(!finalDrawing)return;e.preventDefault();
+const p=finalPoint(e);finalCtx.lineTo(p.x,p.y);finalCtx.stroke();
+document.getElementById('handFeedback').textContent='笔迹已经落下。表达，从亲自书写开始。';
+});
+function endFinal(){finalDrawing=false;}
+finalCanvas.addEventListener('pointerup',endFinal);
+finalCanvas.addEventListener('pointercancel',endFinal);
+restart.onclick=()=>{
+handwrite.style.display='block';
+document.getElementById('handFeedback').textContent='请在纸面上亲手写下一个字。';
+requestAnimationFrame(resizeFinalCanvas);
+};
+document.getElementById('clearFinal').onclick=()=>{
+finalCtx.clearRect(0,0,finalCanvas.width,finalCanvas.height);
+document.getElementById('handFeedback').textContent='纸面已经擦干净，请重新写一个字。';
+};
+window.addEventListener('resize',resizeFinalCanvas);
+
+function resetDe(){
+currentDe=deQuestions[0];
+deSolved=false;
+deInput.value='';
+renderDeQuestion();
+deFeedback.textContent='请选择空格中应该填入的字。';
+to2.disabled=true;
+to2.textContent='继续 →';
+document.querySelectorAll('#deCandidates .candidate').forEach(btn=>btn.classList.remove('selected'));
+}
+document.getElementById('backTop').onclick=()=>{
+go(0);
+deInput.value='';
+resetDe();
+};
 </script>
-</body></html>
+</body>
+</html>
